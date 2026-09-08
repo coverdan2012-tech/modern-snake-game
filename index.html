@@ -43,6 +43,7 @@ canvas{
   display:block;
   width:100vw;
   height:100dvh;
+  touch-action:none;
 }
 
 #backgroundBlur{
@@ -332,20 +333,28 @@ select{
 .dpad{
   position:fixed;
   left:50%;
-  bottom:18px;
   right:auto;
+  bottom:14px;
+
   z-index:50;
+
   display:none;
+
   width:250px;
   height:250px;
+
   grid-template-columns:repeat(3,1fr);
   grid-template-rows:repeat(3,1fr);
-  gap:13px;
+
+  gap:11px;
   padding:4px;
+
   pointer-events:auto;
+  touch-action:none;
+
   user-select:none;
   -webkit-user-select:none;
-  touch-action:none;
+
   transform:translateX(-50%);
 }
 
@@ -356,45 +365,76 @@ body.phone-mode.playing .dpad{
 .pad-btn{
   position:relative;
   z-index:51;
+
   display:flex;
   align-items:center;
   justify-content:center;
+
   min-width:68px;
   min-height:68px;
+
+  padding:0;
+
   border:1px solid rgba(255,255,255,.24);
   border-radius:21px;
+
   color:#fff;
   font:inherit;
   font-size:34px;
   font-weight:900;
+  line-height:1;
+
   cursor:pointer;
   opacity:.84;
-  pointer-events:auto !important;
-  touch-action:manipulation;
+
+  /*
+    Главное изменение:
+    касание обрабатывается без ожидания click.
+  */
+  touch-action:none;
+
   -webkit-tap-highlight-color:transparent;
+
+  user-select:none;
+  -webkit-user-select:none;
+
+  pointer-events:auto !important;
+
   -webkit-appearance:none;
   appearance:none;
-  background:rgba(255,255,255,.17);
-  box-shadow:0 10px 24px rgba(0,0,0,.28);
+
+  background:rgba(255,255,255,.08);
+
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.12);
+
   backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+
   transition:
-    transform .16s ease,
-    opacity .16s ease,
-    background .16s ease,
-    box-shadow .16s ease;
+    transform .12s ease,
+    opacity .12s ease,
+    background .12s ease,
+    box-shadow .12s ease;
 }
 
 .pad-btn:hover{
-  opacity:1;
-  background:rgba(255,255,255,.2);
-  transform:translateY(-2px);
+  opacity:.9;
+  background:rgba(255,255,255,.12);
+  transform:scale(1.04);
 }
 
+.pad-btn.pressed,
 .pad-btn:active{
   opacity:1;
-  transform:scale(.92);
+  transform:scale(.88);
   background:rgba(124,92,255,.42);
-  box-shadow:0 4px 12px rgba(124,92,255,.28);
+
+  box-shadow:
+    0 0 0 5px rgba(142,246,255,.35),
+    0 4px 14px rgba(124,92,255,.72),
+    inset 0 1px 0 rgba(255,255,255,.22);
 }
 
 .pad-btn.up{
@@ -435,10 +475,13 @@ body.phone-mode.playing .dpad{
     left:50%;
     right:auto;
     bottom:14px;
+
     width:min(250px,68vw);
     height:min(250px,68vw);
-    gap:11px;
+
+    gap:10px;
     padding:3px;
+
     transform:translateX(-50%);
   }
 
@@ -447,6 +490,21 @@ body.phone-mode.playing .dpad{
     min-height:58px;
     border-radius:18px;
     font-size:30px;
+  }
+}
+
+@media(max-width:380px){
+  .dpad{
+    width:210px;
+    height:210px;
+    gap:8px;
+  }
+
+  .pad-btn{
+    min-width:52px;
+    min-height:52px;
+    border-radius:16px;
+    font-size:27px;
   }
 }
 </style>
@@ -475,8 +533,7 @@ body.phone-mode.playing .dpad{
       <h1>Modern Snake</h1>
 
       <p>
-        Выбери управление. Поле всегда состоит ровно из 16 на 16 клеток
-        и имеет видимую границу.
+        Выбери управление. Поле состоит из 16 на 16 клеток.
       </p>
 
       <div class="mode-grid">
@@ -486,7 +543,7 @@ body.phone-mode.playing .dpad{
           <div class="mode-title">Телефон</div>
 
           <div class="small">
-            Управление четырьмя полупрозрачными кнопками.
+            Управление большими кнопками.
           </div>
 
           <button
@@ -547,7 +604,6 @@ body.phone-mode.playing .dpad{
 
       <p>
         Режим: <b id="selectedModeText">—</b>.
-        Управление можно изменить в любое время.
       </p>
 
       <label for="difficulty">Сложность</label>
@@ -587,7 +643,7 @@ body.phone-mode.playing .dpad{
       </div>
 
       <div class="small" style="margin-top:14px">
-        Поле: 16×16 клеток. Общий баланс яблок сохраняется между играми.
+        Поле: 16×16 клеток. Яблоки сохраняются между играми.
       </div>
     </div>
   </div>
@@ -778,6 +834,12 @@ let nextDirection = {x:1,y:0};
 let apple = {x:8,y:8};
 let growth = 0;
 
+const speedByDifficulty = {
+  easy:0.15,
+  normal:0.11,
+  hard:0.075
+};
+
 const skins = [
   {
     id:"neon",
@@ -933,12 +995,6 @@ const skins = [
   }
 ];
 
-const speedByDifficulty = {
-  easy:0.15,
-  normal:0.11,
-  hard:0.075
-};
-
 function resizeCanvas(){
   dpr = Math.min(window.devicePixelRatio || 1,2);
 
@@ -1024,6 +1080,11 @@ function updateLabels(){
   document.body.classList.toggle(
     "phone-mode",
     selectedMode === "phone"
+  );
+
+  document.body.classList.toggle(
+    "playing",
+    playing
   );
 
   el("difficulty").value = difficulty;
@@ -1495,7 +1556,6 @@ function drawSnake(){
       y2-y1
     );
 
-    const width = cellSize*.72;
     const height = cellSize*.58;
 
     const centerX = (x1+x2)/2;
@@ -1523,15 +1583,19 @@ function drawSnake(){
       currentSkin === "admin" ? 22 : 10;
 
     drawRoundedRect(
-      -Math.max(distance/2,width/2),
+      -Math.max(distance/2,cellSize*.36),
       -height/2,
-      Math.max(distance,width),
+      Math.max(distance,cellSize*.72),
       height,
       height/2
     );
 
     ctx.fill();
     ctx.restore();
+  }
+
+  if(!snake[0]){
+    return;
   }
 
   const head = snake[0];
@@ -1888,14 +1952,39 @@ function handleDirectionButton(directionName){
   }
 }
 
+/*
+  ВАЖНО:
+  Здесь используется pointerdown вместо click.
+  Направление меняется сразу при касании пальца.
+*/
 document.querySelectorAll(".pad-btn").forEach(button => {
   const directionName = button.dataset.direction;
 
-  button.addEventListener("click",event => {
+  button.addEventListener("pointerdown",event => {
     event.preventDefault();
     event.stopPropagation();
 
+    button.classList.add("pressed");
+
     handleDirectionButton(directionName);
+  });
+
+  button.addEventListener("pointerup",event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    button.classList.remove("pressed");
+  });
+
+  button.addEventListener("pointercancel",event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    button.classList.remove("pressed");
+  });
+
+  button.addEventListener("pointerleave",() => {
+    button.classList.remove("pressed");
   });
 });
 
