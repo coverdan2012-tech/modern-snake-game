@@ -333,10 +333,9 @@ select{
 .dpad{
   position:fixed;
   left:50%;
-  right:auto;
-  bottom:4px;
+  bottom:-8px;
 
-  z-index:50;
+  z-index:1000;
 
   display:none;
 
@@ -349,8 +348,8 @@ select{
   gap:11px;
   padding:4px;
 
-  pointer-events:auto;
-  touch-action:none;
+  pointer-events:auto !important;
+  touch-action:none !important;
 
   user-select:none;
   -webkit-user-select:none;
@@ -364,7 +363,7 @@ body.phone-mode.playing .dpad{
 
 .pad-btn{
   position:relative;
-  z-index:51;
+  z-index:1001;
 
   display:flex;
   align-items:center;
@@ -387,14 +386,13 @@ body.phone-mode.playing .dpad{
   cursor:pointer;
   opacity:.65;
 
-  touch-action:none;
+  touch-action:none !important;
+  pointer-events:auto !important;
 
   -webkit-tap-highlight-color:transparent;
 
   user-select:none;
   -webkit-user-select:none;
-
-  pointer-events:auto !important;
 
   -webkit-appearance:none;
   appearance:none;
@@ -424,13 +422,25 @@ body.phone-mode.playing .dpad{
 .pad-btn.pressed,
 .pad-btn:active{
   opacity:1;
-  transform:scale(.88);
   background:rgba(124,92,255,.25);
 
   box-shadow:
     0 0 0 4px rgba(142,246,255,.16),
     0 4px 14px rgba(124,92,255,.35),
     inset 0 1px 0 rgba(255,255,255,.12);
+
+  transform:scale(.88);
+}
+
+.pad-btn.down{
+  grid-column:2;
+  grid-row:3;
+  transform:translateY(-83px);
+}
+
+.pad-btn.down.pressed,
+.pad-btn.down:active{
+  transform:translateY(-83px) scale(.88);
 }
 
 .pad-btn.up{
@@ -451,12 +461,13 @@ body.phone-mode.playing .dpad{
 .pad-btn.down{
   grid-column:2;
   grid-row:3;
-  transform:translateY(-14px);
+
+  transform:translateY(-83px);
 }
 
 .pad-btn.down.pressed,
 .pad-btn.down:active{
-  transform:translateY(-14px) scale(.88);
+  transform:translateY(-83px) scale(.88);
 }
 
 #shopBalance{
@@ -475,8 +486,7 @@ body.phone-mode.playing .dpad{
 
   .dpad{
     left:50%;
-    right:auto;
-    bottom:4px;
+    bottom:-8px;
 
     width:min(250px,68vw);
     height:min(250px,68vw);
@@ -1948,28 +1958,64 @@ function handleDirectionButton(directionName){
 document.querySelectorAll(".pad-btn").forEach(button => {
   const directionName = button.dataset.direction;
 
-  button.addEventListener("pointerdown",event => {
+  function pressButton(event){
     event.preventDefault();
     event.stopPropagation();
+
+    if(
+      typeof button.setPointerCapture === "function" &&
+      event.pointerId !== undefined
+    ){
+      try{
+        button.setPointerCapture(event.pointerId);
+      }catch(error){}
+    }
 
     button.classList.add("pressed");
 
     handleDirectionButton(directionName);
-  });
+  }
 
-  button.addEventListener("pointerup",event => {
+  function releaseButton(event){
     event.preventDefault();
     event.stopPropagation();
 
     button.classList.remove("pressed");
-  });
 
-  button.addEventListener("pointercancel",event => {
-    event.preventDefault();
-    event.stopPropagation();
+    if(
+      typeof button.releasePointerCapture === "function" &&
+      event.pointerId !== undefined
+    ){
+      try{
+        button.releasePointerCapture(event.pointerId);
+      }catch(error){}
+    }
+  }
 
-    button.classList.remove("pressed");
-  });
+  button.addEventListener(
+    "pointerdown",
+    pressButton,
+    {passive:false}
+  );
+
+  button.addEventListener(
+    "pointerup",
+    releaseButton,
+    {passive:false}
+  );
+
+  button.addEventListener(
+    "pointercancel",
+    releaseButton,
+    {passive:false}
+  );
+
+  button.addEventListener(
+    "lostpointercapture",
+    () => {
+      button.classList.remove("pressed");
+    }
+  );
 });
 
 document.addEventListener("keydown",event => {
