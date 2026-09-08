@@ -49,7 +49,7 @@ canvas{
 #backgroundBlur{
   position:fixed;
   inset:0;
-  z-index:10;
+  z-index:0;
   pointer-events:none !important;
   opacity:0;
   background:rgba(4,8,22,.3);
@@ -66,7 +66,7 @@ canvas{
 .ui{
   position:fixed;
   inset:0;
-  z-index:20;
+  z-index:100;
   pointer-events:auto;
 }
 
@@ -74,7 +74,7 @@ canvas{
   position:absolute;
   top:16px;
   left:16px;
-  z-index:30;
+  z-index:130;
   display:flex;
   gap:10px;
   flex-wrap:wrap;
@@ -97,7 +97,7 @@ canvas{
 .panel{
   position:absolute;
   inset:0;
-  z-index:40;
+  z-index:110;
   display:none;
   align-items:center;
   justify-content:center;
@@ -113,7 +113,7 @@ canvas{
 
 .card{
   position:relative;
-  z-index:41;
+  z-index:120;
   width:min(94vw,900px);
   max-height:92vh;
   overflow:auto;
@@ -163,7 +163,7 @@ p{
 
 .btn{
   position:relative;
-  z-index:50;
+  z-index:200;
   min-height:48px;
   border:0;
   border-radius:14px;
@@ -214,7 +214,7 @@ label{
 
 select{
   position:relative;
-  z-index:50;
+  z-index:200;
   width:100%;
   min-height:48px;
   padding:12px 14px;
@@ -311,7 +311,7 @@ select{
   position:absolute;
   top:16%;
   left:50%;
-  z-index:60;
+  z-index:160;
   padding:10px 15px;
   border:1px solid rgba(255,209,102,.4);
   border-radius:999px;
@@ -375,7 +375,7 @@ body.phone-mode.playing .dpad{
 
   padding:0;
 
-  border:1px solid rgba(255,255,255,.24);
+  border:1px solid rgba(255,255,255,.12);
   border-radius:21px;
 
   color:#fff;
@@ -385,12 +385,8 @@ body.phone-mode.playing .dpad{
   line-height:1;
 
   cursor:pointer;
-  opacity:.84;
+  opacity:.65;
 
-  /*
-    Главное изменение:
-    касание обрабатывается без ожидания click.
-  */
   touch-action:none;
 
   -webkit-tap-highlight-color:transparent;
@@ -403,14 +399,14 @@ body.phone-mode.playing .dpad{
   -webkit-appearance:none;
   appearance:none;
 
-  background:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
 
   box-shadow:
-    0 10px 24px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.12);
+    0 10px 24px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.07);
 
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
 
   transition:
     transform .12s ease,
@@ -420,8 +416,8 @@ body.phone-mode.playing .dpad{
 }
 
 .pad-btn:hover{
-  opacity:.9;
-  background:rgba(255,255,255,.12);
+  opacity:.78;
+  background:rgba(255,255,255,.07);
   transform:scale(1.04);
 }
 
@@ -429,17 +425,12 @@ body.phone-mode.playing .dpad{
 .pad-btn:active{
   opacity:1;
   transform:scale(.88);
-  background:rgba(124,92,255,.42);
+  background:rgba(124,92,255,.25);
 
   box-shadow:
-    0 0 0 5px rgba(142,246,255,.35),
-    0 4px 14px rgba(124,92,255,.72),
-    inset 0 1px 0 rgba(255,255,255,.22);
-}
-
-.pad-btn.down.pressed,
-.pad-btn.down:active{
-  transform:translateY(-14px) scale(.88);
+    0 0 0 4px rgba(142,246,255,.16),
+    0 4px 14px rgba(124,92,255,.35),
+    inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .pad-btn.up{
@@ -460,12 +451,12 @@ body.phone-mode.playing .dpad{
 .pad-btn.down{
   grid-column:2;
   grid-row:3;
-
-  /*
-    Поднимаем нижнюю кнопку ближе
-    к остальным стрелкам.
-  */
   transform:translateY(-14px);
+}
+
+.pad-btn.down.pressed,
+.pad-btn.down:active{
+  transform:translateY(-14px) scale(.88);
 }
 
 #shopBalance{
@@ -843,7 +834,6 @@ let snake = [];
 let direction = {x:1,y:0};
 let nextDirection = {x:1,y:0};
 let apple = {x:8,y:8};
-let growth = 0;
 
 const speedByDifficulty = {
   easy:0.15,
@@ -1020,11 +1010,9 @@ function resizeCanvas(){
 
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  const reservedWidth = 0;
-
   boardSize = Math.min(
     720,
-    viewportWidth - 18 - reservedWidth,
+    viewportWidth - 18,
     viewportHeight - 18
   );
 
@@ -1199,7 +1187,6 @@ function placeApple(){
 
 function resetGame(){
   score = 0;
-  growth = 0;
   rewardGiven = false;
 
   snake = [];
@@ -1330,6 +1317,7 @@ function updateGame(){
   }
 
   updateLabels();
+}
 
 function drawRoundedRect(
   x,
@@ -1957,11 +1945,6 @@ function handleDirectionButton(directionName){
   }
 }
 
-/*
-  ВАЖНО:
-  Здесь используется pointerdown вместо click.
-  Направление меняется сразу при касании пальца.
-*/
 document.querySelectorAll(".pad-btn").forEach(button => {
   const directionName = button.dataset.direction;
 
@@ -1987,61 +1970,48 @@ document.querySelectorAll(".pad-btn").forEach(button => {
 
     button.classList.remove("pressed");
   });
-
-  button.addEventListener("pointerleave",() => {
-    button.classList.remove("pressed");
-  });
 });
 
 document.addEventListener("keydown",event => {
   const key = event.key.toLowerCase();
 
-  const upKeys = [
-    "arrowup",
-    "w",
-    "ц"
-  ];
-
-  const downKeys = [
-    "arrowdown",
-    "s",
-    "ы"
-  ];
-
-  const leftKeys = [
-    "arrowleft",
-    "a",
-    "ф"
-  ];
-
-  const rightKeys = [
-    "arrowright",
-    "d",
-    "в"
-  ];
-
-  if(upKeys.includes(key)){
+  if(
+    key === "arrowup" ||
+    key === "w" ||
+    key === "ц"
+  ){
     event.preventDefault();
     setDirection(0,-1);
     return;
   }
 
-  if(downKeys.includes(key)){
+  if(
+    key === "arrowdown" ||
+    key === "s" ||
+    key === "ы"
+  ){
     event.preventDefault();
     setDirection(0,1);
     return;
   }
 
-  if(leftKeys.includes(key)){
+  if(
+    key === "arrowleft" ||
+    key === "a" ||
+    key === "ф"
+  ){
     event.preventDefault();
     setDirection(-1,0);
     return;
   }
 
-  if(rightKeys.includes(key)){
+  if(
+    key === "arrowright" ||
+    key === "d" ||
+    key === "в"
+  ){
     event.preventDefault();
     setDirection(1,0);
-    return;
   }
 });
 
