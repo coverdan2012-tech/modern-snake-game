@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snake 16x16</title>
+
+<style>
+:root{
+  --text:#eef4ff;
+  --green:#20e3b2;
+  --blue:#8ef6ff;
+  --purple:#7c5cff;
+  --red:#ff4d6d;
+  --gold:#ffd166;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  width:100%;
+  height:100%;
+  margin:0;
+  overflow:hidden;
+  background:#050816;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);
+}
+
+body{
+  position:fixed;
+  inset:0;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  display:block;
+  width:100vw;
+  height:100dvh;
+}
+
+#backgroundBlur{
+  position:fixed;
+  inset:0;
+  z-index:10;
+  pointer-events:none !important;
+  opacity:0;
+  background:rgba(4,8,22,.3);
+  -webkit-backdrop-filter:blur(15px) saturate(.82);
+  backdrop-filter:blur(15px) saturate(.82);
+  transition:opacity .28s ease;
+}
+
+#backgroundBlur.visible{
+  opacity:1;
+  pointer-events:none !important;
+}
+
+.ui{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  pointer-events:auto;
+}
+
+.topbar{
+  position:absolute;
+  top:16px;
+  left:16px;
+  z-index:30;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  pointer-events:auto;
+}
+
+.pill{
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  background:rgba(10,14,30,.78);
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+  backdrop-filter:blur(14px);
+}
+
+.panel{
+  position:absolute;
+  inset:0;
+  z-index:40;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  pointer-events:auto !important;
+  touch-action:auto;
+}
+
+.panel.show{
+  display:flex;
+  pointer-events:auto !important;
+}
+
+.card{
+  position:relative;
+  z-index:41;
+  width:min(94vw,900px);
+  max-height:92vh;
+  overflow:auto;
+  padding:26px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:26px;
+  background:rgba(12,16,34,.97);
+  box-shadow:0 30px 90px rgba(0,0,0,.55);
+  filter:none;
+  -webkit-filter:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  pointer-events:auto !important;
+  touch-action:auto;
+  animation:cardIn .25s ease;
+}
+
+@keyframes cardIn{
+  from{
+    opacity:0;
+    transform:translateY(12px) scale(.98);
+  }
+
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+h1,
+h2,
+h3{
+  margin:0 0 12px;
+}
+
+p{
+  margin:0 0 16px;
+  line-height:1.5;
+  opacity:.82;
+}
+
+.row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  position:relative;
+  z-index:50;
+  border:0;
+  border-radius:14px;
+  padding:13px 17px;
+  color:#06101f;
+  font-weight:800;
+  cursor:pointer;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-appearance:none;
+  appearance:none;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  transition:
+    transform .18s ease,
+    filter .18s ease,
+    box-shadow .18s ease;
+  box-shadow:0 10px 24px rgba(32,227,178,.18);
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  filter:saturate(1.12);
+}
+
+.btn:active{
+  transform:scale(.97);
+}
+
+.btn.secondary{
+  background:linear-gradient(135deg,#9d83ff,#cbbdff);
+}
+
+.btn.gold{
+  background:linear-gradient(135deg,#ffd166,#ff9f1c);
+}
+
+.btn.danger{
+  background:linear-gradient(135deg,#ff9caf,var(--red));
+}
+
+label{
+  display:block;
+  margin:11px 0 6px;
+  opacity:.86;
+}
+
+select{
+  position:relative;
+  z-index:50;
+  width:100%;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:13px;
+  outline:none;
+  color:#fff;
+  background:#0a1024;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+}
+
+.small{
+  font-size:12px;
+  line-height:1.45;
+  opacity:.72;
+}
+
+.mode-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:18px;
+}
+
+.mode-card{
+  padding:18px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;
+  background:rgba(255,255,255,.05);
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    border-color .18s ease;
+}
+
+.mode-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(142,246,255,.5);
+  background:rgba(255,255,255,.08);
+}
+
+.mode-icon{
+  margin-bottom:10px;
+  font-size:34px;
+}
+
+.mode-title{
+  margin-bottom:6px;
+  font-size:20px;
+  font-weight:800;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:12px;
+  margin-top:14px;
+}
+
+.skin{
+  padding:14px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:18px;
+  background:rgba(255,255,255,.05);
+  transition:
+    transform .18s ease,
+    background .18s ease;
+}
+
+.skin:hover{
+  transform:translateY(-3px);
+  background:rgba(255,255,255,.08);
+}
+
+.skin-preview{
+  height:66px;
+  margin-bottom:10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.tag{
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  font-size:12px;
+}
+
+.toast{
+  position:absolute;
+  top:16%;
+  left:50%;
+  z-index:60;
+  padding:10px 15px;
+  border:1px solid rgba(255,209,102,.4);
+  border-radius:999px;
+  color:#fff;
+  background:rgba(255,209,102,.16);
+  opacity:0;
+  transform:translate(-50%,-6px);
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+.dpad{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:50;
+  display:none;
+  width:184px;
+  height:184px;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:9px;
+  pointer-events:auto;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+
+body.phone-mode .dpad{
+  display:grid;
+}
+
+.pad-btn{
+  position:relative;
+  z-index:51;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  color:#fff;
+  font-size:23px;
+  font-weight:900;
+  cursor:pointer;
+  opacity:.78;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-appearance:none;
+  appearance:none;
+  background:rgba(255,255,255,.13);
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
+  backdrop-filter:blur(10px);
+  transition:
+    transform .16s ease,
+    opacity .16s ease,
+    background .16s ease,
+    box-shadow .16s ease;
+}
+
+.pad-btn:hover{
+  opacity:1;
+  background:rgba(255,255,255,.2);
+  transform:translateY(-2px);
+}
+
+.pad-btn:active{
+  opacity:1;
+  transform:scale(.92);
+  background:rgba(124,92,255,.42);
+  box-shadow:0 4px 12px rgba(124,92,255,.28);
+}
+
+.pad-btn.up{
+  grid-column:2;
+  grid-row:1;
+}
+
+.pad-btn.left{
+  grid-column:1;
+  grid-row:2;
+}
+
+.pad-btn.right{
+  grid-column:3;
+  grid-row:2;
+}
+
+.pad-btn.down{
+  grid-column:2;
+  grid-row:3;
+}
+
+#shopBalance{
+  color:var(--gold);
+  font-weight:800;
+}
+
+@media(max-width:700px){
+  .card{
+    padding:20px;
+  }
+
+  .mode-grid{
+    grid-template-columns:1fr;
+  }
+
+  .dpad{
+    right:12px;
+    bottom:12px;
+    width:166px;
+    height:166px;
+  }
+
+  .pad-btn{
+    border-radius:15px;
+    font-size:21px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="backgroundBlur"></div>
+
+<div class="ui">
+
+  <div class="topbar">
+    <div class="pill">Счёт: <b id="score">0</b></div>
+    <div class="pill">Рекорд: <b id="best">0</b></div>
+    <div class="pill">Яблоки: <b id="balance">0</b></div>
+    <div class="pill">Скин: <b id="skinName">Neon</b></div>
+    <div class="pill">Режим: <b id="modeName">Не выбран</b></div>
+  </div>
+
+  <div id="toast" class="toast">+1 яблоко</div>
+
+  <div id="modePanel" class="panel show">
+    <div class="card">
+      <h1>Snake 16×16</h1>
+
+      <p>
+        Выбери управление. Поле всегда состоит ровно из 16 на 16 клеток
+        и имеет видимую границу.
+      </p>
+
+      <div class="mode-grid">
+        <div class="mode-card">
+          <div class="mode-icon">📱</div>
+          <div class="mode-title">Телефон</div>
+
+          <div class="small">
+            Управление четырьмя полупрозрачными кнопками.
+          </div>
+
+          <button class="btn" id="phoneModeBtn" style="margin-top:14px">
+            Выбрать телефон
+          </button>
+        </div>
+
+        <div class="mode-card">
+          <div class="mode-icon">🖥️</div>
+          <div class="mode-title">ПК</div>
+
+          <div class="small">
+            Управление стрелками или клавишами W, A, S, D.
+          </div>
+
+          <button class="btn secondary" id="pcModeBtn" style="margin-top:14px">
+            Выбрать ПК
+          </button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:22px">
+        <button class="btn secondary" id="shopFromModeBtn">
+          Магазин
+        </button>
+
+        <button class="btn danger" id="resetBtn">
+          Сбросить прогресс
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="menuPanel" class="panel">
+    <div class="card">
+      <h1>Snake 16×16</h1>
+
+      <p>
+        Режим: <b id="selectedModeText">—</b>.
+        Управление можно изменить в любое время.
+      </p>
+
+      <label for="difficulty">Сложность</label>
+
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="normal">Normal</option>
+        <option value="hard">Hard</option>
+      </select>
+
+      <div class="row" style="margin-top:18px">
+        <button class="btn" id="playBtn">
+          Играть
+        </button>
+
+        <button class="btn secondary" id="changeModeBtn">
+          Выбрать режим
+        </button>
+
+        <button class="btn gold" id="shopBtn">
+          Магазин
+        </button>
+      </div>
+
+      <div class="small" style="margin-top:14px">
+        Поле: 16×16 клеток. Общий баланс яблок сохраняется между играми.
+      </div>
+    </div>
+  </div>
+
+  <div id="shopPanel" class="panel">
+    <div class="card">
+      <h2>Магазин скинов</h2>
+
+      <p>
+        Общий баланс:
+        <span id="shopBalance">0</span> яблок.
+      </p>
+
+      <div id="skinsList" class="grid"></div>
+
+      <div class="row" style="margin-top:20px">
+        <button class="btn secondary" id="shopBackBtn">
+          Назад
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameoverPanel" class="panel">
+    <div class="card">
+      <h2>Игра окончена</h2>
+
+      <p>
+        Счёт этой игры: <b id="finalScore">0</b>.
+        Яблоки добавлены в общий баланс.
+      </p>
+
+      <div class="row">
+        <button class="btn" id="restartBtn">
+          Заново
+        </button>
+
+        <button class="btn secondary" id="gameoverMenuBtn">
+          В меню
+        </button>
+
+        <button class="btn gold" id="gameoverShopBtn">
+          Магазин
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="dpad" class="dpad">
+  <button class="pad-btn up" data-direction="up">▲</button>
+  <button class="pad-btn left" data-direction="left">◀</button>
+  <button class="pad-btn down" data-direction="down">▼</button>
+  <button class="pad-btn right" data-direction="right">▶</button>
+</div>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const el = id => document.getElementById(id);
+
+const modePanel = el("modePanel");
+const menuPanel = el("menuPanel");
+const shopPanel = el("shopPanel");
+const gameoverPanel = el("gameoverPanel");
+const backgroundBlur = el("backgroundBlur");
+
+const scoreEl = el("score");
+const bestEl = el("best");
+const balanceEl = el("balance");
+const skinNameEl = el("skinName");
+const modeNameEl = el("modeName");
+const selectedModeTextEl = el("selectedModeText");
+const finalScoreEl = el("finalScore");
+const shopBalanceEl = el("shopBalance");
+const toastEl = el("toast");
+
+const GRID_SIZE = 16;
+
+let dpr = 1;
+let viewportWidth = 0;
+let viewportHeight = 0;
+
+let boardSize = 480;
+let boardX = 0;
+let boardY = 0;
+let cellSize = 30;
+
+let score = 0;
+let best = Number(localStorage.getItem("snake_best") || 0);
+let balance = Number(localStorage.getItem("snake_balance") || 0);
+
+let currentSkin = localStorage.getItem("snake_skin") || "neon";
+let selectedMode = localStorage.getItem("snake_mode") || "";
+let difficulty = localStorage.getItem("snake_difficulty") || "normal";
+
+let purchasedSkins;
+
+try{
+  purchasedSkins = JSON.parse(
+    localStorage.getItem("snake_purchased_skins") || '["neon"]'
+  );
+}catch(error){
+  purchasedSkins = ["neon"];
+}
+
+if(!Array.isArray(purchasedSkins)){
+  purchasedSkins = ["neon"];
+}
+
+if(!purchasedSkins.includes("neon")){
+  purchasedSkins.push("neon");
+}
+
+if(!purchasedSkins.includes(currentSkin)){
+  currentSkin = "neon";
+}
+
+let playing = false;
+let rewardGiven = false;
+let lastTime = 0;
+let accumulator = 0;
+
+let snake = [];
+let direction = {x:1,y:0};
+let nextDirection = {x:1,y:0};
+let apple = {x:8,y:8};
+let growth = 0;
+
+const skins = [
+  {id:"neon",name:"Neon",cost:0,start:"#20e3b2",end:"#7c5cff",head:"#b5fff0"},
+  {id:"sunset",name:"Sunset",cost:12,start:"#ff8a00",end:"#ff4d6d",head:"#ffd9b3"},
+  {id:"ice",name:"Ice",cost:28,start:"#8ef6ff",end:"#3f9cff",head:"#e7fcff"},
+  {id:"gold",name:"Gold",cost:45,start:"#ffd166",end:"#ff9f1c",head:"#fff3b0"},
+  {id:"violet",name:"Violet",cost:60,start:"#d29cff",end:"#713cff",head:"#f1ddff"},
+  {id:"ocean",name:"Ocean",cost:75,start:"#00c6ff",end:"#0072ff",head:"#d8f8ff"},
+  {id:"forest",name:"Forest",cost:90,start:"#b7f34a",end:"#16833b",head:"#efffc9"},
+  {id:"lava",name:"Lava",cost:110,start:"#ffdf00",end:"#e31b23",head:"#fff0aa"},
+  {id:"rose",name:"Rose",cost:130,start:"#ff9a9e",end:"#c33764",head:"#ffe0e5"},
+  {id:"cyber",name:"Cyber",cost:150,start:"#00f5a0",end:"#00d9f5",head:"#d9ffff"},
+  {id:"shadow",name:"Shadow",cost:175,start:"#aeb8c8",end:"#202735",head:"#f0f4ff"},
+  {id:"candy",name:"Candy",cost:200,start:"#ff9de2",end:"#ff6b9d",head:"#fff0fb"},
+  {id:"toxic",name:"Toxic",cost:230,start:"#d4ff00",end:"#65b000",head:"#f5ffc0"},
+  {id:"aurora",name:"Aurora",cost:260,start:"#00f2fe",end:"#4facfe",head:"#e0ffff"},
+  {id:"royal",name:"Royal",cost:300,start:"#f6d365",end:"#fda085",head:"#fff2cc"},
+  {id:"matrix",name:"Matrix",cost:350,start:"#a8ff78",end:"#149414",head:"#eaffdf"},
+  {id:"plasma",name:"Plasma",cost:400,start:"#f093fb",end:"#f5576c",head:"#ffe4fb"},
+  {id:"galaxy",name:"Galaxy",cost:500,start:"#667eea",end:"#764ba2",head:"#eee9ff"}
+];
+
+const speedByDifficulty = {
+  easy:0.15,
+  normal:0.11,
+  hard:0.075
+};
+
+function resizeCanvas(){
+  dpr = Math.min(window.devicePixelRatio || 1,2);
+
+  viewportWidth = window.innerWidth;
+  viewportHeight = window.innerHeight;
+
+  canvas.style.width = viewportWidth + "px";
+  canvas.style.height = viewportHeight + "px";
+
+  canvas.width = Math.floor(viewportWidth*dpr);
+  canvas.height = Math.floor(viewportHeight*dpr);
+
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const reservedWidth = selectedMode === "phone" ? 215 : 0;
+
+  boardSize = Math.min(
+    640,
+    viewportWidth - 32 - reservedWidth,
+    viewportHeight - 32
+  );
+
+  boardSize = Math.max(256,boardSize);
+
+  cellSize = boardSize / GRID_SIZE;
+
+  boardX = Math.round((viewportWidth-boardSize)/2);
+  boardY = Math.round((viewportHeight-boardSize)/2);
+
+  draw();
+}
+
+window.addEventListener("resize",resizeCanvas);
+
+window.addEventListener("orientationchange",() => {
+  setTimeout(resizeCanvas,100);
+});
+
+function getStepTime(){
+  return speedByDifficulty[difficulty] || speedByDifficulty.normal;
+}
+
+function getCurrentSkin(){
+  return skins.find(skin => skin.id === currentSkin) || skins[0];
+}
+
+function saveProgress(){
+  localStorage.setItem("snake_best",String(best));
+  localStorage.setItem("snake_balance",String(balance));
+  localStorage.setItem("snake_skin",currentSkin);
+  localStorage.setItem("snake_mode",selectedMode);
+  localStorage.setItem("snake_difficulty",difficulty);
+
+  localStorage.setItem(
+    "snake_purchased_skins",
+    JSON.stringify(purchasedSkins)
+  );
+}
+
+function updateLabels(){
+  scoreEl.textContent = score;
+  bestEl.textContent = best;
+  balanceEl.textContent = balance;
+  shopBalanceEl.textContent = balance;
+  skinNameEl.textContent = getCurrentSkin().name;
+
+  const modeText =
+    selectedMode === "phone" ? "Телефон" :
+    selectedMode === "pc" ? "ПК" :
+    "Не выбран";
+
+  modeNameEl.textContent = modeText;
+  selectedModeTextEl.textContent = modeText;
+
+  document.body.classList.toggle(
+    "phone-mode",
+    selectedMode === "phone"
+  );
+
+  document.getElementById("difficulty").value = difficulty;
+}
+
+function showPanel(panel){
+  [
+    modePanel,
+    menuPanel,
+    shopPanel,
+    gameoverPanel
+  ].forEach(item => item.classList.remove("show"));
+
+  if(panel){
+    panel.classList.add("show");
+  }
+
+  const shouldBlur =
+    panel === modePanel ||
+    panel === menuPanel ||
+    panel === shopPanel ||
+    panel === gameoverPanel;
+
+  backgroundBlur.classList.toggle("visible",shouldBlur);
+}
+
+function showModeSelection(){
+  playing = false;
+  showPanel(modePanel);
+  updateLabels();
+  draw();
+}
+
+function showMenu(){
+  playing = false;
+  showPanel(menuPanel);
+  updateLabels();
+  draw();
+}
+
+function showShop(){
+  playing = false;
+  renderShop();
+  showPanel(shopPanel);
+  updateLabels();
+  draw();
+}
+
+function showGameOver(){
+  playing = false;
+  finalScoreEl.textContent = score;
+  showPanel(gameoverPanel);
+  updateLabels();
+  draw();
+}
+
+function chooseMode(mode){
+  selectedMode = mode;
+  saveProgress();
+  updateLabels();
+  resizeCanvas();
+  showMenu();
+}
+
+function randomFreeCell(){
+  const free = [];
+
+  for(let y=0;y<GRID_SIZE;y++){
+    for(let x=0;x<GRID_SIZE;x++){
+      const occupied = snake.some(part => {
+        return part.x === x && part.y === y;
+      });
+
+      if(!occupied){
+        free.push({x,y});
+      }
+    }
+  }
+
+  if(free.length === 0){
+    return {x:8,y:8};
+  }
+
+  return free[Math.floor(Math.random()*free.length)];
+}
+
+function placeApple(){
+  apple = randomFreeCell();
+}
+
+function resetGame(){
+  score = 0;
+  growth = 0;
+  rewardGiven = false;
+
+  snake = [];
+
+  for(let i=0;i<4;i++){
+    snake.push({
+      x:7-i,
+      y:8
+    });
+  }
+
+  direction = {x:1,y:0};
+  nextDirection = {x:1,y:0};
+
+  placeApple();
+  updateLabels();
+  draw();
+}
+
+function startGame(){
+  if(!selectedMode){
+    showModeSelection();
+    return;
+  }
+
+  showPanel(null);
+  playing = true;
+  rewardGiven = false;
+  accumulator = 0;
+
+  resetGame();
+
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  if(rewardGiven){
+    return;
+  }
+
+  rewardGiven = true;
+  playing = false;
+
+  best = Math.max(best,score);
+
+  /*
+    Здесь яблоки за игру начисляются только один раз.
+    Повторный вызов endGame больше ничего не добавит.
+  */
+  balance += score;
+
+  saveProgress();
+  updateLabels();
+  showGameOver();
+}
+
+function setDirection(x,y){
+  if(direction.x+x === 0 && direction.y+y === 0){
+    return;
+  }
+
+  if(nextDirection.x+x === 0 && nextDirection.y+y === 0){
+    return;
+  }
+
+  nextDirection = {x,y};
+}
+
+function updateGame(){
+  if(
+    direction.x+nextDirection.x !== 0 ||
+    direction.y+nextDirection.y !== 0
+  ){
+    direction = nextDirection;
+  }
+
+  const head = snake[0];
+
+  const nextX = head.x+direction.x;
+  const nextY = head.y+direction.y;
+
+  if(
+    nextX < 0 ||
+    nextX >= GRID_SIZE ||
+    nextY < 0 ||
+    nextY >= GRID_SIZE
+  ){
+    endGame();
+    return;
+  }
+
+  const hitsBody = snake.some((part,index) => {
+    return index > 0 &&
+      part.x === nextX &&
+      part.y === nextY;
+  });
+
+  if(hitsBody){
+    endGame();
+    return;
+  }
+
+  snake.unshift({
+    x:nextX,
+    y:nextY
+  });
+
+  if(nextX === apple.x && nextY === apple.y){
+    score++;
+
+    /*
+      За съеденное яблоко баланс здесь не увеличиваем.
+      Все яблоки за текущую игру начисляются один раз в endGame().
+    */
+
+    best = Math.max(best,score);
+
+    placeApple();
+    saveProgress();
+    updateLabels();
+    showToast("+1 к счёту");
+  }else{
+    if(growth > 0){
+      growth--;
+    }else{
+      snake.pop();
+    }
+  }
+
+  updateLabels();
+}
+
+function drawRoundedRect(x,y,width,height,radius){
+  const r = Math.min(radius,width/2,height/2);
+
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+width,y,x+width,y+height,r);
+  ctx.arcTo(x+width,y+height,x,y+height,r);
+  ctx.arcTo(x,y+height,x,y,r);
+  ctx.arcTo(x,y,x+width,y,r);
+  ctx.closePath();
+}
+
+function drawBackground(){
+  const gradient = ctx.createLinearGradient(
+    0,
+    0,
+    0,
+    viewportHeight
+  );
+
+  gradient.addColorStop(0,"#0d1737");
+  gradient.addColorStop(1,"#050816");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0,0,viewportWidth,viewportHeight);
+}
+
+function drawBoard(){
+  const borderWidth = 6;
+
+  ctx.save();
+
+  ctx.shadowColor = "rgba(32,227,178,.3)";
+  ctx.shadowBlur = 28;
+
+  ctx.fillStyle = "#071024";
+
+  ctx.fillRect(
+    boardX-borderWidth,
+    boardY-borderWidth,
+    boardSize+borderWidth*2,
+    boardSize+borderWidth*2
+  );
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#20e3b2";
+  ctx.lineWidth = borderWidth;
+
+  ctx.strokeRect(
+    boardX-borderWidth/2,
+    boardY-borderWidth/2,
+    boardSize+borderWidth,
+    boardSize+borderWidth
+  );
+
+  ctx.fillStyle = "#091631";
+  ctx.fillRect(boardX,boardY,boardSize,boardSize);
+
+  ctx.strokeStyle = "rgba(255,255,255,.12)";
+  ctx.lineWidth = 1;
+
+  for(let i=0;i<=GRID_SIZE;i++){
+    const px = boardX+i*cellSize;
+
+    ctx.beginPath();
+    ctx.moveTo(px,boardY);
+    ctx.lineTo(px,boardY+boardSize);
+    ctx.stroke();
+  }
+
+  for(let i=0;i<=GRID_SIZE;i++){
+    const py = boardY+i*cellSize;
+
+    ctx.beginPath();
+    ctx.moveTo(boardX,py);
+    ctx.lineTo(boardX+boardSize,py);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function cellCenterX(x){
+  return boardX+x*cellSize+cellSize/2;
+}
+
+function cellCenterY(y){
+  return boardY+y*cellSize+cellSize/2;
+}
+
+function drawApple(){
+  const centerX = cellCenterX(apple.x);
+  const centerY = cellCenterY(apple.y);
+
+  const glow = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    2,
+    centerX,
+    centerY,
+    cellSize*.75
+  );
+
+  glow.addColorStop(0,"rgba(255,255,255,.98)");
+  glow.addColorStop(.25,"rgba(255,209,102,.95)");
+  glow.addColorStop(1,"rgba(255,209,102,0)");
+
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(centerX,centerY,cellSize*.72,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffd166";
+  ctx.beginPath();
+  ctx.arc(centerX,centerY,cellSize*.25,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#7c4b16";
+  ctx.lineWidth = Math.max(1.5,cellSize*.07);
+
+  ctx.beginPath();
+  ctx.moveTo(centerX,centerY-cellSize*.18);
+  ctx.quadraticCurveTo(
+    centerX+cellSize*.12,
+    centerY-cellSize*.38,
+    centerX+cellSize*.25,
+    centerY-cellSize*.27
+  );
+  ctx.stroke();
+}
+
+function drawSnake(){
+  const skin = getCurrentSkin();
+
+  for(let i=snake.length-1;i>0;i--){
+    const part = snake[i];
+    const next = snake[i-1];
+
+    const x1 = cellCenterX(part.x);
+    const y1 = cellCenterY(part.y);
+    const x2 = cellCenterX(next.x);
+    const y2 = cellCenterY(next.y);
+
+    const angle = Math.atan2(y2-y1,x2-x1);
+    const distance = Math.hypot(x2-x1,y2-y1);
+
+    const width = cellSize*.72;
+    const height = cellSize*.58;
+
+    const centerX = (x1+x2)/2;
+    const centerY = (y1+y2)/2;
+
+    const gradient = ctx.createLinearGradient(x1,y1,x2,y2);
+
+    gradient.addColorStop(0,skin.head);
+    gradient.addColorStop(.5,skin.start);
+    gradient.addColorStop(1,skin.end);
+
+    ctx.save();
+    ctx.translate(centerX,centerY);
+    ctx.rotate(angle);
+
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = skin.start;
+    ctx.shadowBlur = 10;
+
+    drawRoundedRect(
+      -Math.max(distance/2,width/2),
+      -height/2,
+      Math.max(distance,width),
+      height,
+      height/2
+    );
+
+    ctx.fill();
+    ctx.restore();
+  }
+
+  const head = snake[0];
+
+  const second = snake[1] || {
+    x:head.x-1,
+    y:head.y
+  };
+
+  const headX = cellCenterX(head.x);
+  const headY = cellCenterY(head.y);
+
+  const directionAngle = Math.atan2(
+    head.y-second.y,
+    head.x-second.x
+  );
+
+  const headGradient = ctx.createLinearGradient(
+    headX-cellSize/2,
+    headY-cellSize/2,
+    headX+cellSize/2,
+    headY+cellSize/2
+  );
+
+  headGradient.addColorStop(0,skin.start);
+  headGradient.addColorStop(1,skin.end);
+
+  ctx.save();
+  ctx.translate(headX,headY);
+  ctx.rotate(directionAngle);
+
+  ctx.fillStyle = headGradient;
+  ctx.shadowColor = skin.start;
+  ctx.shadowBlur = 16;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    0,
+    cellSize*.48,
+    cellSize*.39,
+    0,
+    0,
+    Math.PI*2
+  );
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fff";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    cellSize*.13,
+    -cellSize*.12,
+    Math.max(2.4,cellSize*.08),
+    0,
+    Math.PI*2
+  );
+
+  ctx.arc(
+    cellSize*.13,
+    cellSize*.12,
+    Math.max(2.4,cellSize*.08),
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle = "#15152c";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    cellSize*.16,
+    -cellSize*.12,
+    Math.max(1.1,cellSize*.035),
+    0,
+    Math.PI*2
+  );
+
+  ctx.arc(
+    cellSize*.16,
+    cellSize*.12,
+    Math.max(1.1,cellSize*.035),
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  drawBackground();
+  drawBoard();
+
+  if(snake.length > 0){
+    drawApple();
+    drawSnake();
+  }
+}
+
+function gameLoop(timestamp){
+  if(!playing){
+    draw();
+    return;
+  }
+
+  const delta = (timestamp-lastTime)/1000;
+
+  lastTime = timestamp;
+  accumulator += delta;
+
+  const step = getStepTime();
+
+  while(accumulator >= step){
+    accumulator -= step;
+    updateGame();
+
+    if(!playing){
+      break;
+    }
+  }
+
+  draw();
+
+  if(playing){
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+function showToast(message){
+  toastEl.textContent = message;
+  toastEl.classList.add("show");
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  },900);
+}
+
+function renderShop(){
+  shopBalanceEl.textContent = balance;
+
+  el("skinsList").innerHTML = skins.map(skin => {
+    const isOwned = purchasedSkins.includes(skin.id);
+    const isSelected = currentSkin === skin.id;
+
+    let buttonText = "Купить";
+    let buttonClass = "btn";
+
+    if(isSelected){
+      buttonText = "Выбрано";
+      buttonClass = "btn secondary";
+    }else if(isOwned){
+      buttonText = "Выбрать";
+      buttonClass = "btn secondary";
+    }
+
+    return `
+      <div class="skin">
+        <div
+          class="skin-preview"
+          style="background:linear-gradient(135deg,${skin.start},${skin.end})"
+        ></div>
+
+        <strong>${skin.name}</strong>
+
+        <div class="tag">
+          ${skin.cost === 0 ? "Бесплатно" : skin.cost+" яблок"}
+        </div>
+
+        <button
+          class="${buttonClass}"
+          data-skin-id="${skin.id}"
+          style="width:100%;margin-top:12px"
+        >
+          ${buttonText}
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll("[data-skin-id]").forEach(button => {
+    button.addEventListener("click",event => {
+      event.preventDefault();
+      event.stopPropagation();
+      buyOrSelectSkin(button.dataset.skinId);
+    });
+  });
+}
+
+function buyOrSelectSkin(id){
+  const skin = skins.find(item => item.id === id);
+
+  if(!skin){
+    return;
+  }
+
+  const isOwned = purchasedSkins.includes(skin.id);
+
+  if(isOwned){
+    currentSkin = skin.id;
+
+    saveProgress();
+    updateLabels();
+    renderShop();
+    draw();
+
+    showToast("Скин выбран");
+    return;
+  }
+
+  if(balance < skin.cost){
+    showToast("Не хватает яблок");
+    return;
+  }
+
+  balance -= skin.cost;
+  purchasedSkins.push(skin.id);
+  currentSkin = skin.id;
+
+  saveProgress();
+  updateLabels();
+  renderShop();
+  draw();
+
+  showToast("Скин куплен и сохранён");
+}
+
+function handleDirectionButton(directionName){
+  const directions = {
+    up:{x:0,y:-1},
+    down:{x:0,y:1},
+    left:{x:-1,y:0},
+    right:{x:1,y:0}
+  };
+
+  const value = directions[directionName];
+
+  if(value){
+    setDirection(value.x,value.y);
+  }
+}
+
+document.querySelectorAll(".pad-btn").forEach(button => {
+  const directionName = button.dataset.direction;
+
+  button.addEventListener("click",event => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleDirectionButton(directionName);
+  });
+});
+
+document.addEventListener("keydown",event => {
+  const key = event.key.toLowerCase();
+
+  const upKeys = [
+    "arrowup",
+    "w",
+    "ц"
+  ];
+
+  const downKeys = [
+    "arrowdown",
+    "s",
+    "ы"
+  ];
+
+  const leftKeys = [
+    "arrowleft",
+    "a",
+    "ф"
+  ];
+
+  const rightKeys = [
+    "arrowright",
+    "d",
+    "в"
+  ];
+
+  if(upKeys.includes(key)){
+    event.preventDefault();
+    setDirection(0,-1);
+    return;
+  }
+
+  if(downKeys.includes(key)){
+    event.preventDefault();
+    setDirection(0,1);
+    return;
+  }
+
+  if(leftKeys.includes(key)){
+    event.preventDefault();
+    setDirection(-1,0);
+    return;
+  }
+
+  if(rightKeys.includes(key)){
+    event.preventDefault();
+    setDirection(1,0);
+    return;
+  }
+});
+
+el("phoneModeBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  chooseMode("phone");
+});
+
+el("pcModeBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  chooseMode("pc");
+});
+
+el("playBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  startGame();
+});
+
+el("shopBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  showShop();
+});
+
+el("shopFromModeBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  showShop();
+});
+
+el("shopBackBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if(selectedMode){
+    showMenu();
+  }else{
+    showModeSelection();
+  }
+});
+
+el("changeModeBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  showModeSelection();
+});
+
+el("restartBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  startGame();
+});
+
+el("gameoverMenuBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  showMenu();
+});
+
+el("gameoverShopBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  showShop();
+});
+
+el("resetBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  localStorage.removeItem("snake_best");
+  localStorage.removeItem("snake_balance");
+  localStorage.removeItem("snake_skin");
+  localStorage.removeItem("snake_mode");
+  localStorage.removeItem("snake_difficulty");
+  localStorage.removeItem("snake_purchased_skins");
+
+  location.reload();
+});
+
+el("difficulty").addEventListener("change",event => {
+  difficulty = event.target.value;
+  saveProgress();
+});
+
+saveProgress();
+updateLabels();
+resizeCanvas();
+
+if(selectedMode){
+  showMenu();
+}else{
+  showModeSelection();
+}
+</script>
+
+</body>
+</html>
