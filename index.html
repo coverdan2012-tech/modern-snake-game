@@ -334,7 +334,7 @@ select{
   position:fixed;
   left:50%;
   right:auto;
-  bottom:14px;
+  bottom:4px;
 
   z-index:50;
 
@@ -437,6 +437,11 @@ body.phone-mode.playing .dpad{
     inset 0 1px 0 rgba(255,255,255,.22);
 }
 
+.pad-btn.down.pressed,
+.pad-btn.down:active{
+  transform:translateY(-14px) scale(.88);
+}
+
 .pad-btn.up{
   grid-column:2;
   grid-row:1;
@@ -455,6 +460,12 @@ body.phone-mode.playing .dpad{
 .pad-btn.down{
   grid-column:2;
   grid-row:3;
+
+  /*
+    Поднимаем нижнюю кнопку ближе
+    к остальным стрелкам.
+  */
+  transform:translateY(-14px);
 }
 
 #shopBalance{
@@ -474,7 +485,7 @@ body.phone-mode.playing .dpad{
   .dpad{
     left:50%;
     right:auto;
-    bottom:14px;
+    bottom:4px;
 
     width:min(250px,68vw);
     height:min(250px,68vw);
@@ -1307,7 +1318,6 @@ function updateGame(){
     nextY === apple.y
   ){
     score++;
-    growth++;
 
     best = Math.max(best,score);
 
@@ -1316,15 +1326,10 @@ function updateGame(){
     updateLabels();
     showToast("+1 к счёту");
   }else{
-    if(growth > 0){
-      growth--;
-    }else{
-      snake.pop();
-    }
+    snake.pop();
   }
 
   updateLabels();
-}
 
 function drawRoundedRect(
   x,
