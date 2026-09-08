@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
 <title>Modern Snake</title>
 
 <style>
@@ -84,17 +85,9 @@ canvas{
   border:1px solid rgba(255,255,255,.2);
   border-radius:14px;
   color:#fff;
-
-  /*
-    Последнее число — степень непрозрачности.
-    .86 = почти непрозрачный
-    .55 = полупрозрачный
-  */
-  background:rgba(10,14,30,.10);
-
+  background:rgba(10,14,30,.55);
   -webkit-backdrop-filter:blur(14px);
   backdrop-filter:blur(14px);
-
   box-shadow:
     0 8px 24px rgba(0,0,0,.22),
     inset 0 1px 0 rgba(255,255,255,.08);
@@ -170,10 +163,12 @@ p{
 .btn{
   position:relative;
   z-index:50;
+  min-height:48px;
   border:0;
   border-radius:14px;
   padding:13px 17px;
   color:#06101f;
+  font:inherit;
   font-weight:800;
   cursor:pointer;
   pointer-events:auto !important;
@@ -220,11 +215,13 @@ select{
   position:relative;
   z-index:50;
   width:100%;
+  min-height:48px;
   padding:12px 14px;
   border:1px solid rgba(255,255,255,.12);
   border-radius:13px;
   outline:none;
   color:#fff;
+  font:inherit;
   background:#0a1024;
   pointer-events:auto !important;
   touch-action:manipulation;
@@ -320,6 +317,7 @@ select{
   color:#fff;
   background:rgba(255,209,102,.16);
   opacity:0;
+  pointer-events:none;
   transform:translate(-50%,-6px);
   transition:
     opacity .2s ease,
@@ -333,22 +331,23 @@ select{
 
 .dpad{
   position:fixed;
-  right:18px;
-  bottom:18px;
+  right:14px;
+  bottom:14px;
   z-index:50;
   display:none;
-  width:184px;
-  height:184px;
+  width:250px;
+  height:250px;
   grid-template-columns:repeat(3,1fr);
   grid-template-rows:repeat(3,1fr);
-  gap:9px;
+  gap:13px;
+  padding:4px;
   pointer-events:auto;
   user-select:none;
   -webkit-user-select:none;
   touch-action:none;
 }
 
-body.phone-mode .dpad{
+body.phone-mode.playing .dpad{
   display:grid;
 }
 
@@ -358,20 +357,23 @@ body.phone-mode .dpad{
   display:flex;
   align-items:center;
   justify-content:center;
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:18px;
+  min-width:64px;
+  min-height:64px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:20px;
   color:#fff;
-  font-size:23px;
+  font:inherit;
+  font-size:32px;
   font-weight:900;
   cursor:pointer;
-  opacity:.78;
+  opacity:.82;
   pointer-events:auto !important;
   touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
   -webkit-appearance:none;
   appearance:none;
-  background:rgba(255,255,255,.13);
-  box-shadow:0 10px 24px rgba(0,0,0,.24);
+  background:rgba(255,255,255,.16);
+  box-shadow:0 10px 24px rgba(0,0,0,.28);
   backdrop-filter:blur(10px);
   transition:
     transform .16s ease,
@@ -428,11 +430,13 @@ body.phone-mode .dpad{
   }
 
   .dpad{
-    right:12px;
-    bottom:12px;
-    width:166px;
-    height:166px;
-  }
+  right:12px;
+  bottom:12px;
+  width:230px;
+  height:230px;
+  gap:12px;
+  padding:3px;
+}
 
   .pad-btn{
     border-radius:15px;
@@ -470,6 +474,7 @@ body.phone-mode .dpad{
       </p>
 
       <div class="mode-grid">
+
         <div class="mode-card">
           <div class="mode-icon">📱</div>
           <div class="mode-title">Телефон</div>
@@ -478,7 +483,12 @@ body.phone-mode .dpad{
             Управление четырьмя полупрозрачными кнопками.
           </div>
 
-          <button class="btn" id="phoneModeBtn" style="margin-top:14px">
+          <button
+            type="button"
+            class="btn"
+            id="phoneModeBtn"
+            style="margin-top:14px"
+          >
             Выбрать телефон
           </button>
         </div>
@@ -488,23 +498,39 @@ body.phone-mode .dpad{
           <div class="mode-title">ПК</div>
 
           <div class="small">
-            Управление стрелками или клавишами W, A, S, D.
+            Управление стрелками, W A S D или Ц Ф Ы В.
           </div>
 
-          <button class="btn secondary" id="pcModeBtn" style="margin-top:14px">
+          <button
+            type="button"
+            class="btn secondary"
+            id="pcModeBtn"
+            style="margin-top:14px"
+          >
             Выбрать ПК
           </button>
         </div>
+
       </div>
 
       <div class="row" style="margin-top:22px">
-        <button class="btn secondary" id="shopFromModeBtn">
+
+        <button
+          type="button"
+          class="btn secondary"
+          id="shopFromModeBtn"
+        >
           Магазин
         </button>
 
-        <button class="btn danger" id="resetBtn">
+        <button
+          type="button"
+          class="btn danger"
+          id="resetBtn"
+        >
           Сбросить прогресс
         </button>
+
       </div>
     </div>
   </div>
@@ -527,17 +553,31 @@ body.phone-mode .dpad{
       </select>
 
       <div class="row" style="margin-top:18px">
-        <button class="btn" id="playBtn">
+
+        <button
+          type="button"
+          class="btn"
+          id="playBtn"
+        >
           Играть
         </button>
 
-        <button class="btn secondary" id="changeModeBtn">
+        <button
+          type="button"
+          class="btn secondary"
+          id="changeModeBtn"
+        >
           Выбрать режим
         </button>
 
-        <button class="btn gold" id="shopBtn">
+        <button
+          type="button"
+          class="btn gold"
+          id="shopBtn"
+        >
           Магазин
         </button>
+
       </div>
 
       <div class="small" style="margin-top:14px">
@@ -558,9 +598,23 @@ body.phone-mode .dpad{
       <div id="skinsList" class="grid"></div>
 
       <div class="row" style="margin-top:20px">
-        <button class="btn secondary" id="shopBackBtn">
+
+        <button
+          type="button"
+          class="btn secondary"
+          id="shopBackBtn"
+        >
           Назад
         </button>
+
+        <button
+          type="button"
+          class="btn danger"
+          id="adminSkinBtn"
+        >
+          Ввести пароль Admin
+        </button>
+
       </div>
     </div>
   </div>
@@ -575,17 +629,31 @@ body.phone-mode .dpad{
       </p>
 
       <div class="row">
-        <button class="btn" id="restartBtn">
+
+        <button
+          type="button"
+          class="btn"
+          id="restartBtn"
+        >
           Заново
         </button>
 
-        <button class="btn secondary" id="gameoverMenuBtn">
+        <button
+          type="button"
+          class="btn secondary"
+          id="gameoverMenuBtn"
+        >
           В меню
         </button>
 
-        <button class="btn gold" id="gameoverShopBtn">
+        <button
+          type="button"
+          class="btn gold"
+          id="gameoverShopBtn"
+        >
           Магазин
         </button>
+
       </div>
     </div>
   </div>
@@ -593,10 +661,39 @@ body.phone-mode .dpad{
 </div>
 
 <div id="dpad" class="dpad">
-  <button class="pad-btn up" data-direction="up">▲</button>
-  <button class="pad-btn left" data-direction="left">◀</button>
-  <button class="pad-btn down" data-direction="down">▼</button>
-  <button class="pad-btn right" data-direction="right">▶</button>
+
+  <button
+    type="button"
+    class="pad-btn up"
+    data-direction="up"
+  >
+    ▲
+  </button>
+
+  <button
+    type="button"
+    class="pad-btn left"
+    data-direction="left"
+  >
+    ◀
+  </button>
+
+  <button
+    type="button"
+    class="pad-btn down"
+    data-direction="down"
+  >
+    ▼
+  </button>
+
+  <button
+    type="button"
+    class="pad-btn right"
+    data-direction="right"
+  >
+    ▶
+  </button>
+
 </div>
 
 <script>
@@ -676,24 +773,158 @@ let apple = {x:8,y:8};
 let growth = 0;
 
 const skins = [
-  {id:"neon",name:"Neon",cost:0,start:"#20e3b2",end:"#7c5cff",head:"#b5fff0"},
-  {id:"sunset",name:"Sunset",cost:12,start:"#ff8a00",end:"#ff4d6d",head:"#ffd9b3"},
-  {id:"ice",name:"Ice",cost:28,start:"#8ef6ff",end:"#3f9cff",head:"#e7fcff"},
-  {id:"gold",name:"Gold",cost:45,start:"#ffd166",end:"#ff9f1c",head:"#fff3b0"},
-  {id:"violet",name:"Violet",cost:60,start:"#d29cff",end:"#713cff",head:"#f1ddff"},
-  {id:"ocean",name:"Ocean",cost:75,start:"#00c6ff",end:"#0072ff",head:"#d8f8ff"},
-  {id:"forest",name:"Forest",cost:90,start:"#b7f34a",end:"#16833b",head:"#efffc9"},
-  {id:"lava",name:"Lava",cost:110,start:"#ffdf00",end:"#e31b23",head:"#fff0aa"},
-  {id:"rose",name:"Rose",cost:130,start:"#ff9a9e",end:"#c33764",head:"#ffe0e5"},
-  {id:"cyber",name:"Cyber",cost:150,start:"#00f5a0",end:"#00d9f5",head:"#d9ffff"},
-  {id:"shadow",name:"Shadow",cost:175,start:"#aeb8c8",end:"#202735",head:"#f0f4ff"},
-  {id:"candy",name:"Candy",cost:200,start:"#ff9de2",end:"#ff6b9d",head:"#fff0fb"},
-  {id:"toxic",name:"Toxic",cost:230,start:"#d4ff00",end:"#65b000",head:"#f5ffc0"},
-  {id:"aurora",name:"Aurora",cost:260,start:"#00f2fe",end:"#4facfe",head:"#e0ffff"},
-  {id:"royal",name:"Royal",cost:300,start:"#f6d365",end:"#fda085",head:"#fff2cc"},
-  {id:"matrix",name:"Matrix",cost:350,start:"#a8ff78",end:"#149414",head:"#eaffdf"},
-  {id:"plasma",name:"Plasma",cost:400,start:"#f093fb",end:"#f5576c",head:"#ffe4fb"},
-  {id:"galaxy",name:"Galaxy",cost:500,start:"#667eea",end:"#764ba2",head:"#eee9ff"}
+  {
+    id:"neon",
+    name:"Neon",
+    cost:0,
+    start:"#20e3b2",
+    end:"#7c5cff",
+    head:"#b5fff0"
+  },
+  {
+    id:"sunset",
+    name:"Sunset",
+    cost:12,
+    start:"#ff8a00",
+    end:"#ff4d6d",
+    head:"#ffd9b3"
+  },
+  {
+    id:"ice",
+    name:"Ice",
+    cost:28,
+    start:"#8ef6ff",
+    end:"#3f9cff",
+    head:"#e7fcff"
+  },
+  {
+    id:"gold",
+    name:"Gold",
+    cost:45,
+    start:"#ffd166",
+    end:"#ff9f1c",
+    head:"#fff3b0"
+  },
+  {
+    id:"violet",
+    name:"Violet",
+    cost:60,
+    start:"#d29cff",
+    end:"#713cff",
+    head:"#f1ddff"
+  },
+  {
+    id:"ocean",
+    name:"Ocean",
+    cost:75,
+    start:"#00c6ff",
+    end:"#0072ff",
+    head:"#d8f8ff"
+  },
+  {
+    id:"forest",
+    name:"Forest",
+    cost:90,
+    start:"#b7f34a",
+    end:"#16833b",
+    head:"#efffc9"
+  },
+  {
+    id:"lava",
+    name:"Lava",
+    cost:110,
+    start:"#ffdf00",
+    end:"#e31b23",
+    head:"#fff0aa"
+  },
+  {
+    id:"rose",
+    name:"Rose",
+    cost:130,
+    start:"#ff9a9e",
+    end:"#c33764",
+    head:"#ffe0e5"
+  },
+  {
+    id:"cyber",
+    name:"Cyber",
+    cost:150,
+    start:"#00f5a0",
+    end:"#00d9f5",
+    head:"#d9ffff"
+  },
+  {
+    id:"shadow",
+    name:"Shadow",
+    cost:175,
+    start:"#aeb8c8",
+    end:"#202735",
+    head:"#f0f4ff"
+  },
+  {
+    id:"candy",
+    name:"Candy",
+    cost:200,
+    start:"#ff9de2",
+    end:"#ff6b9d",
+    head:"#fff0fb"
+  },
+  {
+    id:"toxic",
+    name:"Toxic",
+    cost:230,
+    start:"#d4ff00",
+    end:"#65b000",
+    head:"#f5ffc0"
+  },
+  {
+    id:"aurora",
+    name:"Aurora",
+    cost:260,
+    start:"#00f2fe",
+    end:"#4facfe",
+    head:"#e0ffff"
+  },
+  {
+    id:"royal",
+    name:"Royal",
+    cost:300,
+    start:"#f6d365",
+    end:"#fda085",
+    head:"#fff2cc"
+  },
+  {
+    id:"matrix",
+    name:"Matrix",
+    cost:350,
+    start:"#a8ff78",
+    end:"#149414",
+    head:"#eaffdf"
+  },
+  {
+    id:"plasma",
+    name:"Plasma",
+    cost:400,
+    start:"#f093fb",
+    end:"#f5576c",
+    head:"#ffe4fb"
+  },
+  {
+    id:"galaxy",
+    name:"Galaxy",
+    cost:500,
+    start:"#667eea",
+    end:"#764ba2",
+    head:"#eee9ff"
+  },
+  {
+    id:"admin",
+    name:"Admin",
+    cost:0,
+    start:"#ff1744",
+    end:"#000000",
+    head:"#ffffff"
+  }
 ];
 
 const speedByDifficulty = {
@@ -716,7 +947,8 @@ function resizeCanvas(){
 
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  const reservedWidth = selectedMode === "phone" ? 215 : 0;
+  const reservedWidth =
+    selectedMode === "phone" ? 215 : 0;
 
   boardSize = Math.min(
     640,
@@ -728,8 +960,13 @@ function resizeCanvas(){
 
   cellSize = boardSize / GRID_SIZE;
 
-  boardX = Math.round((viewportWidth-boardSize)/2);
-  boardY = Math.round((viewportHeight-boardSize)/2);
+  boardX = Math.round(
+    (viewportWidth-boardSize)/2
+  );
+
+  boardY = Math.round(
+    (viewportHeight-boardSize)/2
+  );
 
   draw();
 }
@@ -741,11 +978,14 @@ window.addEventListener("orientationchange",() => {
 });
 
 function getStepTime(){
-  return speedByDifficulty[difficulty] || speedByDifficulty.normal;
+  return speedByDifficulty[difficulty] ||
+    speedByDifficulty.normal;
 }
 
 function getCurrentSkin(){
-  return skins.find(skin => skin.id === currentSkin) || skins[0];
+  return skins.find(skin => {
+    return skin.id === currentSkin;
+  }) || skins[0];
 }
 
 function saveProgress(){
@@ -762,10 +1002,10 @@ function saveProgress(){
 }
 
 function updateLabels(){
-  scoreEl.textContent = score;
-  bestEl.textContent = best;
-  balanceEl.textContent = balance;
-  shopBalanceEl.textContent = balance;
+  scoreEl.textContent = String(score);
+  bestEl.textContent = String(best);
+  balanceEl.textContent = String(balance);
+  shopBalanceEl.textContent = String(balance);
   skinNameEl.textContent = getCurrentSkin().name;
 
   const modeText =
@@ -781,7 +1021,7 @@ function updateLabels(){
     selectedMode === "phone"
   );
 
-  document.getElementById("difficulty").value = difficulty;
+  el("difficulty").value = difficulty;
 }
 
 function showPanel(panel){
@@ -790,7 +1030,9 @@ function showPanel(panel){
     menuPanel,
     shopPanel,
     gameoverPanel
-  ].forEach(item => item.classList.remove("show"));
+  ].forEach(item => {
+    item.classList.remove("show");
+  });
 
   if(panel){
     panel.classList.add("show");
@@ -802,11 +1044,15 @@ function showPanel(panel){
     panel === shopPanel ||
     panel === gameoverPanel;
 
-  backgroundBlur.classList.toggle("visible",shouldBlur);
+  backgroundBlur.classList.toggle(
+    "visible",
+    shouldBlur
+  );
 }
 
 function showModeSelection(){
   playing = false;
+  document.body.classList.remove("playing");
   showPanel(modePanel);
   updateLabels();
   draw();
@@ -814,6 +1060,7 @@ function showModeSelection(){
 
 function showMenu(){
   playing = false;
+  document.body.classList.remove("playing");
   showPanel(menuPanel);
   updateLabels();
   draw();
@@ -821,6 +1068,7 @@ function showMenu(){
 
 function showShop(){
   playing = false;
+  document.body.classList.remove("playing");
   renderShop();
   showPanel(shopPanel);
   updateLabels();
@@ -829,7 +1077,8 @@ function showShop(){
 
 function showGameOver(){
   playing = false;
-  finalScoreEl.textContent = score;
+  document.body.classList.remove("playing");
+  finalScoreEl.textContent = String(score);
   showPanel(gameoverPanel);
   updateLabels();
   draw();
@@ -862,7 +1111,9 @@ function randomFreeCell(){
     return {x:8,y:8};
   }
 
-  return free[Math.floor(Math.random()*free.length)];
+  return free[
+    Math.floor(Math.random()*free.length)
+  ];
 }
 
 function placeApple(){
@@ -898,7 +1149,10 @@ function startGame(){
   }
 
   showPanel(null);
+
   playing = true;
+  document.body.classList.add("playing");
+
   rewardGiven = false;
   accumulator = 0;
 
@@ -915,13 +1169,9 @@ function endGame(){
 
   rewardGiven = true;
   playing = false;
+  document.body.classList.remove("playing");
 
   best = Math.max(best,score);
-
-  /*
-    Здесь яблоки за игру начисляются только один раз.
-    Повторный вызов endGame больше ничего не добавит.
-  */
   balance += score;
 
   saveProgress();
@@ -930,11 +1180,17 @@ function endGame(){
 }
 
 function setDirection(x,y){
-  if(direction.x+x === 0 && direction.y+y === 0){
+  if(
+    direction.x+x === 0 &&
+    direction.y+y === 0
+  ){
     return;
   }
 
-  if(nextDirection.x+x === 0 && nextDirection.y+y === 0){
+  if(
+    nextDirection.x+x === 0 &&
+    nextDirection.y+y === 0
+  ){
     return;
   }
 
@@ -980,13 +1236,12 @@ function updateGame(){
     y:nextY
   });
 
-  if(nextX === apple.x && nextY === apple.y){
+  if(
+    nextX === apple.x &&
+    nextY === apple.y
+  ){
     score++;
-
-    /*
-      За съеденное яблоко баланс здесь не увеличиваем.
-      Все яблоки за текущую игру начисляются один раз в endGame().
-    */
+    growth++;
 
     best = Math.max(best,score);
 
@@ -1005,15 +1260,49 @@ function updateGame(){
   updateLabels();
 }
 
-function drawRoundedRect(x,y,width,height,radius){
-  const r = Math.min(radius,width/2,height/2);
+function drawRoundedRect(
+  x,
+  y,
+  width,
+  height,
+  radius
+){
+  const r = Math.min(
+    radius,
+    width/2,
+    height/2
+  );
 
   ctx.beginPath();
   ctx.moveTo(x+r,y);
-  ctx.arcTo(x+width,y,x+width,y+height,r);
-  ctx.arcTo(x+width,y+height,x,y+height,r);
-  ctx.arcTo(x,y+height,x,y,r);
-  ctx.arcTo(x,y,x+width,y,r);
+  ctx.arcTo(
+    x+width,
+    y,
+    x+width,
+    y+height,
+    r
+  );
+  ctx.arcTo(
+    x+width,
+    y+height,
+    x,
+    y+height,
+    r
+  );
+  ctx.arcTo(
+    x,
+    y+height,
+    x,
+    y,
+    r
+  );
+  ctx.arcTo(
+    x,
+    y,
+    x+width,
+    y,
+    r
+  );
   ctx.closePath();
 }
 
@@ -1029,7 +1318,13 @@ function drawBackground(){
   gradient.addColorStop(1,"#050816");
 
   ctx.fillStyle = gradient;
-  ctx.fillRect(0,0,viewportWidth,viewportHeight);
+
+  ctx.fillRect(
+    0,
+    0,
+    viewportWidth,
+    viewportHeight
+  );
 }
 
 function drawBoard(){
@@ -1061,7 +1356,13 @@ function drawBoard(){
   );
 
   ctx.fillStyle = "#091631";
-  ctx.fillRect(boardX,boardY,boardSize,boardSize);
+
+  ctx.fillRect(
+    boardX,
+    boardY,
+    boardSize,
+    boardSize
+  );
 
   ctx.strokeStyle = "rgba(255,255,255,.12)";
   ctx.lineWidth = 1;
@@ -1108,25 +1409,56 @@ function drawApple(){
     cellSize*.75
   );
 
-  glow.addColorStop(0,"rgba(255,255,255,.98)");
-  glow.addColorStop(.25,"rgba(255,209,102,.95)");
-  glow.addColorStop(1,"rgba(255,209,102,0)");
+  glow.addColorStop(
+    0,
+    "rgba(255,255,255,.98)"
+  );
+
+  glow.addColorStop(
+    .25,
+    "rgba(255,209,102,.95)"
+  );
+
+  glow.addColorStop(
+    1,
+    "rgba(255,209,102,0)"
+  );
 
   ctx.fillStyle = glow;
+
   ctx.beginPath();
-  ctx.arc(centerX,centerY,cellSize*.72,0,Math.PI*2);
+  ctx.arc(
+    centerX,
+    centerY,
+    cellSize*.72,
+    0,
+    Math.PI*2
+  );
   ctx.fill();
 
   ctx.fillStyle = "#ffd166";
+
   ctx.beginPath();
-  ctx.arc(centerX,centerY,cellSize*.25,0,Math.PI*2);
+  ctx.arc(
+    centerX,
+    centerY,
+    cellSize*.25,
+    0,
+    Math.PI*2
+  );
   ctx.fill();
 
   ctx.strokeStyle = "#7c4b16";
-  ctx.lineWidth = Math.max(1.5,cellSize*.07);
+  ctx.lineWidth = Math.max(
+    1.5,
+    cellSize*.07
+  );
 
   ctx.beginPath();
-  ctx.moveTo(centerX,centerY-cellSize*.18);
+  ctx.moveTo(
+    centerX,
+    centerY-cellSize*.18
+  );
   ctx.quadraticCurveTo(
     centerX+cellSize*.12,
     centerY-cellSize*.38,
@@ -1148,8 +1480,15 @@ function drawSnake(){
     const x2 = cellCenterX(next.x);
     const y2 = cellCenterY(next.y);
 
-    const angle = Math.atan2(y2-y1,x2-x1);
-    const distance = Math.hypot(x2-x1,y2-y1);
+    const angle = Math.atan2(
+      y2-y1,
+      x2-x1
+    );
+
+    const distance = Math.hypot(
+      x2-x1,
+      y2-y1
+    );
 
     const width = cellSize*.72;
     const height = cellSize*.58;
@@ -1157,19 +1496,26 @@ function drawSnake(){
     const centerX = (x1+x2)/2;
     const centerY = (y1+y2)/2;
 
-    const gradient = ctx.createLinearGradient(x1,y1,x2,y2);
+    const gradient = ctx.createLinearGradient(
+      x1,
+      y1,
+      x2,
+      y2
+    );
 
     gradient.addColorStop(0,skin.head);
     gradient.addColorStop(.5,skin.start);
     gradient.addColorStop(1,skin.end);
 
     ctx.save();
+
     ctx.translate(centerX,centerY);
     ctx.rotate(angle);
 
     ctx.fillStyle = gradient;
     ctx.shadowColor = skin.start;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur =
+      currentSkin === "admin" ? 22 : 10;
 
     drawRoundedRect(
       -Math.max(distance/2,width/2),
@@ -1205,18 +1551,28 @@ function drawSnake(){
     headY+cellSize/2
   );
 
-  headGradient.addColorStop(0,skin.start);
-  headGradient.addColorStop(1,skin.end);
+  headGradient.addColorStop(
+    0,
+    skin.start
+  );
+
+  headGradient.addColorStop(
+    1,
+    skin.end
+  );
 
   ctx.save();
+
   ctx.translate(headX,headY);
   ctx.rotate(directionAngle);
 
   ctx.fillStyle = headGradient;
   ctx.shadowColor = skin.start;
-  ctx.shadowBlur = 16;
+  ctx.shadowBlur =
+    currentSkin === "admin" ? 28 : 16;
 
   ctx.beginPath();
+
   ctx.ellipse(
     0,
     0,
@@ -1226,6 +1582,7 @@ function drawSnake(){
     0,
     Math.PI*2
   );
+
   ctx.fill();
 
   ctx.shadowBlur = 0;
@@ -1272,12 +1629,20 @@ function drawSnake(){
   );
 
   ctx.fill();
+
   ctx.restore();
 }
 
 function draw(){
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
   drawBackground();
@@ -1304,6 +1669,7 @@ function gameLoop(timestamp){
 
   while(accumulator >= step){
     accumulator -= step;
+
     updateGame();
 
     if(!playing){
@@ -1329,8 +1695,60 @@ function showToast(message){
   },900);
 }
 
+function unlockAdminSkin(){
+  const adminUnlocked =
+    localStorage.getItem("snake_admin_unlocked") === "true";
+
+  if(adminUnlocked){
+    if(!purchasedSkins.includes("admin")){
+      purchasedSkins.push("admin");
+    }
+
+    currentSkin = "admin";
+
+    saveProgress();
+    updateLabels();
+    renderShop();
+    draw();
+
+    showToast("Admin-скин выбран");
+    return;
+  }
+
+  const password = window.prompt(
+    "Введите пароль администратора:"
+  );
+
+  if(password === null){
+    return;
+  }
+
+  if(password !== "Polar_Nya"){
+    showToast("Неверный пароль");
+    return;
+  }
+
+  localStorage.setItem(
+    "snake_admin_unlocked",
+    "true"
+  );
+
+  if(!purchasedSkins.includes("admin")){
+    purchasedSkins.push("admin");
+  }
+
+  currentSkin = "admin";
+
+  saveProgress();
+  updateLabels();
+  renderShop();
+  draw();
+
+  showToast("Admin-скин разблокирован");
+}
+
 function renderShop(){
-  shopBalanceEl.textContent = balance;
+  shopBalanceEl.textContent = String(balance);
 
   el("skinsList").innerHTML = skins.map(skin => {
     const isOwned = purchasedSkins.includes(skin.id);
@@ -1339,13 +1757,30 @@ function renderShop(){
     let buttonText = "Купить";
     let buttonClass = "btn";
 
-    if(isSelected){
+    if(skin.id === "admin"){
+      buttonText = isSelected
+        ? "Выбрано"
+        : isOwned
+          ? "Выбрать"
+          : "Ввести пароль";
+
+      buttonClass = isSelected || isOwned
+        ? "btn secondary"
+        : "btn danger";
+    }else if(isSelected){
       buttonText = "Выбрано";
       buttonClass = "btn secondary";
     }else if(isOwned){
       buttonText = "Выбрать";
       buttonClass = "btn secondary";
     }
+
+    const priceText =
+      skin.id === "admin"
+        ? "Только по паролю"
+        : skin.cost === 0
+          ? "Бесплатно"
+          : skin.cost+" яблок";
 
     return `
       <div class="skin">
@@ -1357,10 +1792,11 @@ function renderShop(){
         <strong>${skin.name}</strong>
 
         <div class="tag">
-          ${skin.cost === 0 ? "Бесплатно" : skin.cost+" яблок"}
+          ${priceText}
         </div>
 
         <button
+          type="button"
           class="${buttonClass}"
           data-skin-id="${skin.id}"
           style="width:100%;margin-top:12px"
@@ -1375,15 +1811,29 @@ function renderShop(){
     button.addEventListener("click",event => {
       event.preventDefault();
       event.stopPropagation();
-      buyOrSelectSkin(button.dataset.skinId);
+
+      const id = button.dataset.skinId;
+
+      if(id === "admin"){
+        unlockAdminSkin();
+      }else{
+        buyOrSelectSkin(id);
+      }
     });
   });
 }
 
 function buyOrSelectSkin(id){
-  const skin = skins.find(item => item.id === id);
+  const skin = skins.find(item => {
+    return item.id === id;
+  });
 
   if(!skin){
+    return;
+  }
+
+  if(skin.id === "admin"){
+    unlockAdminSkin();
     return;
   }
 
@@ -1439,6 +1889,7 @@ document.querySelectorAll(".pad-btn").forEach(button => {
   button.addEventListener("click",event => {
     event.preventDefault();
     event.stopPropagation();
+
     handleDirectionButton(directionName);
   });
 });
@@ -1536,6 +1987,12 @@ el("shopBackBtn").addEventListener("click",event => {
   }
 });
 
+el("adminSkinBtn").addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+  unlockAdminSkin();
+});
+
 el("changeModeBtn").addEventListener("click",event => {
   event.preventDefault();
   event.stopPropagation();
@@ -1570,6 +2027,7 @@ el("resetBtn").addEventListener("click",event => {
   localStorage.removeItem("snake_mode");
   localStorage.removeItem("snake_difficulty");
   localStorage.removeItem("snake_purchased_skins");
+  localStorage.removeItem("snake_admin_unlocked");
 
   location.reload();
 });
