@@ -49,17 +49,27 @@ canvas{
 #backgroundBlur{
   position:fixed;
   inset:0;
-  z-index:0;
+  z-index:50;
+
   pointer-events:none !important;
+
   opacity:0;
-  background:rgba(4,8,22,.3);
-  -webkit-backdrop-filter:blur(15px) saturate(.82);
-  backdrop-filter:blur(15px) saturate(.82);
-  transition:opacity .28s ease;
+  visibility:hidden;
+
+  background:rgba(4,8,22,.28);
+
+  -webkit-backdrop-filter:blur(12px) saturate(.82);
+  backdrop-filter:blur(12px) saturate(.82);
+
+  transition:
+    opacity .28s ease,
+    visibility .28s ease;
 }
+
 
 #backgroundBlur.visible{
   opacity:1;
+  visibility:visible;
   pointer-events:none !important;
 }
 
@@ -1227,6 +1237,8 @@ function startGame(){
     showModeSelection();
     return;
   }
+
+  backgroundBlur.classList.remove("visible");
 
   showPanel(null);
 
