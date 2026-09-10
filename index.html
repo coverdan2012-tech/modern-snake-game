@@ -216,6 +216,29 @@ p{
   background:linear-gradient(135deg,#ff9caf,var(--red));
 }
 
+.pause-btn{
+  display:none;
+
+  min-height:42px;
+  padding:9px 14px;
+
+  color:#fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7c5cff,
+      #9d83ff
+    );
+
+  box-shadow:
+    0 8px 20px rgba(124,92,255,.25);
+}
+
+body.playing .pause-btn{
+  display:block;
+}
+
 label{
   display:block;
   margin:11px 0 6px;
@@ -490,6 +513,12 @@ body.phone-mode.playing .dpad{
     border-radius:18px;
     font-size:30px;
   }
+
+  .pause-btn{
+    min-height:38px;
+    padding:7px 11px;
+    font-size:12px;
+  }
 }
 
 @media(max-width:380px){
@@ -546,6 +575,14 @@ body.phone-mode.playing .dpad{
     <div class="pill">Яблоки: <b id="balance">0</b></div>
     <div class="pill">Скин: <b id="skinName">Neon</b></div>
     <div class="pill">Режим: <b id="modeName">Не выбран</b></div>
+
+    <button
+      type="button"
+      class="btn pause-btn"
+      id="pauseBtn"
+    >
+      Пауза
+    </button>
   </div>
 
   <div id="toast" class="toast">+1 яблоко</div>
@@ -703,6 +740,34 @@ body.phone-mode.playing .dpad{
     </div>
   </div>
 
+  <div id="pausePanel" class="panel">
+    <div class="card">
+      <h2>Пауза</h2>
+
+      <p>
+        Игра приостановлена.
+      </p>
+
+      <div class="row">
+        <button
+          type="button"
+          class="btn"
+          id="continueBtn"
+        >
+          Продолжить
+        </button>
+
+        <button
+          type="button"
+          class="btn secondary"
+          id="pauseMenuBtn"
+        >
+          В меню
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="gameoverPanel" class="panel">
     <div class="card">
       <h2>Игра окончена</h2>
@@ -791,8 +856,13 @@ const el = id => document.getElementById(id);
 const modePanel = el("modePanel");
 const menuPanel = el("menuPanel");
 const shopPanel = el("shopPanel");
+const pausePanel = el("pausePanel");
 const gameoverPanel = el("gameoverPanel");
 const backgroundBlur = el("backgroundBlur");
+
+const pauseBtn = el("pauseBtn");
+const continueBtn = el("continueBtn");
+const pauseMenuBtn = el("pauseMenuBtn");
 
 const scoreEl = el("score");
 const bestEl = el("best");
@@ -846,6 +916,7 @@ if(!purchasedSkins.includes(currentSkin)){
 }
 
 let playing = false;
+let paused = false;
 let rewardGiven = false;
 let lastTime = 0;
 let accumulator = 0;
@@ -1115,6 +1186,7 @@ function showPanel(panel){
     modePanel,
     menuPanel,
     shopPanel,
+    pausePanel,
     gameoverPanel
   ].forEach(item => {
     item.classList.remove("show");
@@ -1128,6 +1200,7 @@ function showPanel(panel){
     panel === modePanel ||
     panel === menuPanel ||
     panel === shopPanel ||
+    panel === pausePanel ||
     panel === gameoverPanel;
 
   backgroundBlur.classList.toggle(
@@ -1159,6 +1232,41 @@ function showShop(){
   showPanel(shopPanel);
   updateLabels();
   draw();
+}
+
+function pauseGame(){
+  if(!playing || paused){
+    return;
+  }
+
+  paused = true;
+
+  showPanel(pausePanel);
+  updateLabels();
+  draw();
+}
+
+function continueGame(){
+  if(!playing || !paused){
+    return;
+  }
+
+  paused = false;
+
+  showPanel(null);
+
+  lastTime = performance.now();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function leavePauseToMenu(){
+  paused = false;
+  playing = false;
+
+  document.body.classList.remove("playing");
+
+  showMenu();
 }
 
 function showGameOver(){
@@ -1243,6 +1351,8 @@ function startGame(){
   showPanel(null);
 
   playing = true;
+  paused = false;
+
   document.body.classList.add("playing");
 
   rewardGiven = false;
@@ -1568,8 +1678,7 @@ function drawSnake(){
     accumulator / getStepTime()
   );
 
-  const smoothStep =
-    progress * progress * (3 - 2 * progress);
+  const smoothStep = progress;
 
   const positions = snake.map((part,index) => {
     const oldPart =
@@ -1767,7 +1876,7 @@ function draw(){
 }
 
 function gameLoop(timestamp){
-  if(!playing){
+  if(!playing || paused){
     draw();
     return;
   }
@@ -2111,6 +2220,27 @@ el("pcModeBtn").addEventListener("click",event => {
   event.preventDefault();
   event.stopPropagation();
   chooseMode("pc");
+});
+
+pauseBtn.addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  pauseGame();
+});
+
+continueBtn.addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  continueGame();
+});
+
+pauseMenuBtn.addEventListener("click",event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  leavePauseToMenu();
 });
 
 el("playBtn").addEventListener("click",event => {
